@@ -91,10 +91,13 @@ class nmpc_planner:
 
 		self.set_optimize_function()
 		self.set_constrains()
+		# s_opts = {"max_iter": 300}
+		# p_opts = {"expand":False}
 		self.opti.solver("ipopt")
 		sol = self.opti.solve()
 		sol_X = sol.value(self.X)
 		self.solution = sol_X
+		self.inputs_sol = sol.value(self.U)
 
 		# clear optmizer
 		self.opti = casadi.Opti()
@@ -134,10 +137,32 @@ class nmpc_planner:
 		raise NotImplementError
 
 	def set_optimize_function(self):
-		self.opti.minimize(wg*sumsqr(self.pos[:, -1] - self.trajectory_desired[:, -1]) 
-			                 + wg_yaw * sumsqr(self.yaw[-1] - self.orientation_goal[2]) 
-			                 + ws * sumsqr(self.pos[:, 0:-1] - self.trajectory_desired[:, 0:-1]) 
-			                 + wu * sumsqr(self.U**2))
+		# Goal Cost
+		goal_pos_cost = wg * sumsqr(self.pos[:, -1] - self.trajectory_desired[:, -1])
+		goal_yaw_cost = wg_yaw * sumsqr(self.yaw[-1] - self.orientation_goal[2])
+		goal_cost = goal_pos_cost + goal_yaw_cost
+
+		# States Cost
+		states_goal_cost =  ws * sumsqr(self.pos[:, 0:-1] - self.trajectory_desired[:, 0:-1]) 
+		states_collision_cost = 0 # not necessary
+		states_cost = states_goal_cost + states_collision_cost
+
+		# Control Cost:
+		control_min_cost = 0
+		control_continuous_cost = 0
+		for i in range(horizon):
+			control_min_cost += self.U[:, i].T @ Q_u @ self.U[:, i]
+			if i != 0:
+				control_diff = self.U[:, i] - self.U[:, i-1]
+				control_continuous_cost += control_diff.T @ Q_ud @ control_diff
+
+		control_cost = control_min_cost + control_continuous_cost
+
+		self.opti.minimize(
+						   goal_cost 
+						 + states_cost
+			       		 + control_cost
+			       			)
 
 
 if __name__ == "__main__":
