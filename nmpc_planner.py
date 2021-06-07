@@ -107,8 +107,8 @@ class nmpc_planner:
 		else:
 			self.fig, self.ax = plt.subplots()
 			self.first_time = True
-			self.ax.set_xlim([ENV_X_MIN*1.5, ENV_X_MAX*1.5])
-			self.ax.set_ylim([ENV_Y_MIN*1.5, ENV_Y_MAX*1.5])
+			self.ax.set_xlim([ENV_X_MIN*1.1, ENV_X_MAX*1.1])
+			self.ax.set_ylim([ENV_Y_MIN*1.1, ENV_Y_MAX*1.1])
 			
 			sol_x = sol_X[0, :]
 			sol_y = sol_X[1, :]

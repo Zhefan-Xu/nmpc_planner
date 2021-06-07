@@ -1,7 +1,7 @@
-ENV_X_MIN = -2
-ENV_X_MAX = 11
-ENV_Y_MIN = -2
-ENV_Y_MAX = 11
+ENV_X_MIN = -5
+ENV_X_MAX = 15
+ENV_Y_MIN = -5
+ENV_Y_MAX = 15
 
 static_obstacle = [[8, 10, 0], [12, 3, 0], [3, 2, 0], [0, 6, 0]]
 
