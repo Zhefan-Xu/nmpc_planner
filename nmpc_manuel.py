@@ -1,8 +1,12 @@
 from nmpc_planner import *
 
-class ccnmpc(nmpc_planner):
+delta = 0.5 # this parameter is differnet
+
+class nmpc_manuel(nmpc_planner):
 	def __init__(self):
 		nmpc_planner.__init__(self)
+		
+
 
 	def set_constrains(self):
 		self.opti.subject_to(self.X[0:3, 0] == self.pos_start)
@@ -29,44 +33,26 @@ class ccnmpc(nmpc_planner):
 			self.opti.subject_to(self.X[1, i+1] < ENV_Y_MAX)
 
 			# Obstacle constain:
+			delta_i = delta/len(static_obstacle)
+			# delta_i = 0.3
 			for obs_pos, size, uncertainty in zip(static_obstacle, static_obstacle_size, static_obstacle_uncertainty):
-				# Transform matrix (to ellipse)
-				omega_sqrt = np.array([
-							      [1/((size[0]/2 * np.sqrt(2))), 0],
-								  [0, 1/((size[1]/2 * np.sqrt(2)))]
-									])
-
-				cov_o = np.eye(2)
-				cov_o[0, 0] = uncertainty[0]
-				cov_o[1, 1] = uncertainty[1]
-				cov_o_hat = omega_sqrt.T @ cov_o @ omega_sqrt
-
-				cov_total_hat = cov_o
-
 				current_pos = self.pos[:, i]	# current position
-				current_pos_hat = omega_sqrt @ current_pos[0:2]
 
-				obs_pos_hat = omega_sqrt @ np.array(obs_pos[0:2]).reshape(-1, 1)
-				v_io_hat = current_pos_hat - obs_pos_hat 
+				lhs = 0
+				for n in range(2):
+					c = erfinv(1-2*delta_i) * np.sqrt(2*1*uncertainty[n]*1)
+					d = size[n]
+					diff = current_pos[n] - obs_pos[n]
+					lhs += (diff/(d+c))**2
 
+				self.opti.subject_to(lhs >= 2)
 
-				unit_io_hat = v_io_hat/norm_2(v_io_hat) # a_io
-
-				c = erfinv(1-2*delta) * np.sqrt(2*unit_io_hat.T @ cov_total_hat @ unit_io_hat)
-
-				self.opti.subject_to(unit_io_hat.T @ v_io_hat - 1 >= c)
-
-
-# start = [0, 0, 0, 0, 0, np.pi/2]
-# goal = [10, 10, 0, 0, 0, 0]
-# p = ccnmpc()
-# p.generate_trajectory(start, goal, plot=True)
 
 if __name__ == "__main__":
 	start = [0, 0, 0, 0, 0, np.pi/2]
 	goal = [10, 6, 0, 0, 0, 0]
 
-	p = ccnmpc()
+	p = nmpc_manuel()
 	plot_stats = False
 	num_iter = 100
 	for i in range(num_iter):
@@ -172,6 +158,3 @@ if __name__ == "__main__":
 		goal = [goal_x, goal_y, 0, 0, 0, goal_yaw]
 
 		plt.waitforbuttonpress()
-		
-		
-	# plt.show()

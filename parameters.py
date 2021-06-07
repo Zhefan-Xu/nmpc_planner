@@ -2,8 +2,8 @@ import numpy as np
 
 num_states = 9 #[x, y, z, vx, vy, vz, roll, pitch, yaw]
 num_inputs = 4 #[T, roll, pitch, yaw_dot]
-horizon = 40
-time = 4
+horizon = 80
+time = 8
 delta = 0.3 # Maximum Collsion Chance
 
 
@@ -24,7 +24,7 @@ yaw_rate_max = 0.75
 # Optimization
 wg = 100000
 wg_yaw = 10000
-ws = 0
+ws = 1000
 wu = 100
 
 
