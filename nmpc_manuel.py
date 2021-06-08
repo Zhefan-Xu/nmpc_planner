@@ -33,20 +33,14 @@ class nmpc_manuel(nmpc_planner):
 			self.opti.subject_to(self.X[1, i+1] < ENV_Y_MAX)
 
 			# Obstacle constain:
-			delta_i = delta/len(static_obstacle)
+			delta_i = delta/(len(static_obstacle))
 			# delta_i = 0.3
 			for obs_pos, size, uncertainty in zip(static_obstacle, static_obstacle_size, static_obstacle_uncertainty):
 				current_pos = self.pos[:, i]	# current position
 
-				lhs = 0
-				for n in range(2):
-					c = erfinv(1-2*delta_i) * np.sqrt(2*1*uncertainty[n]*1)
-					d = size[n]
-					diff = current_pos[n] - obs_pos[n]
-					lhs += (diff/(d+c))**2
 
-				self.opti.subject_to(lhs >= 2)
-
+				self.opti.subject_to(((current_pos[0] - obs_pos[0])/(size[0]/2+ erfinv(1-2*delta_i) * np.sqrt(2*1*uncertainty[0]*1)))**2
+				+ ((current_pos[1] - obs_pos[1])/(size[1]/2+ erfinv(1-2*delta_i) * np.sqrt(2*1*uncertainty[1]*1)))**2 >= 2)
 
 if __name__ == "__main__":
 	start = [0, 0, 0, 0, 0, np.pi/2]
@@ -62,6 +56,17 @@ if __name__ == "__main__":
 		solution = p.solution
 		inputs_sol = p.inputs_sol
 		start = [solution[0, -1], solution[1, -1],  solution[2, -1], 0, 0, solution[8, -1]]
+
+
+		for obs_pos, size, uncertainty in zip(static_obstacle, static_obstacle_size, static_obstacle_uncertainty):
+			delta_i = delta/len(static_obstacle)
+			xo, yo = obs_pos[0] - size[0]/2, obs_pos[1] - size[1]/2
+
+			size_increase = [erfinv(1-2*delta_i) * np.sqrt(2*1*uncertainty[0]*1), erfinv(1-2*delta_i) * np.sqrt(2*1*uncertainty[1]*1)]
+			rect = patches.Rectangle((xo-0.5*size_increase[0], yo-0.5*size_increase[1]), size[0] + size_increase[0], size[1]+size_increase[1], linewidth=1, edgecolor='r', facecolor='none')
+			ellipse = patches.Ellipse((obs_pos[0], obs_pos[1]), 2* (size[0] + size_increase[0])/2 * np.sqrt(2), 2* (size[1]+size_increase[1])/2 * np.sqrt(2), linewidth=1, edgecolor='g', facecolor='none')
+			p.ax.add_patch(rect)
+			p.ax.add_patch(ellipse)
 
 		# plot for states
 		if plot_stats:

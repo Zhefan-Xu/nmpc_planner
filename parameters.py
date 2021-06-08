@@ -2,9 +2,9 @@ import numpy as np
 
 num_states = 9 #[x, y, z, vx, vy, vz, roll, pitch, yaw]
 num_inputs = 4 #[T, roll, pitch, yaw_dot]
-horizon = 80
+horizon = 40
 time = 8
-delta = 0.3 # Maximum Collsion Chance
+delta = 0.1 # Maximum Collsion Chance
 
 
 
@@ -15,7 +15,7 @@ k_roll = 1
 tau_pitch = 1
 k_pitch = 1
 
-m = 1.2 #kgg
+m = 1.2 #kg
 Thrust_max = 2*m*g
 T_max = Thrust_max/m
 angle_max = np.pi/6
@@ -24,7 +24,7 @@ yaw_rate_max = 0.75
 # Optimization
 wg = 100000
 wg_yaw = 10000
-ws = 1000
+ws = 0
 wu = 100
 
 
